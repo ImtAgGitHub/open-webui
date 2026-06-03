@@ -72,24 +72,20 @@
 					</span>
 				</button>
 			</LinkPreview.Trigger>
-			<LinkPreview.Content
-				class="z-[999]"
-				align="start"
-				strategy="fixed"
-				sideOffset={6}
-				el={containerElement}
-			>
-				<div class="bg-gray-50 dark:bg-gray-850 rounded-xl p-1 cursor-pointer">
-					{#each token.citationIdentifiers ?? token.ids as identifier}
-						{@const tokenId =
-							typeof identifier === 'string' ? parseInt(identifier.split('#')[0]) : identifier}
-						{@const sourceInfo = getSourceInfo(tokenId - 1)}
-						<div class="">
-							<Source id={identifier} title={sourceInfo.name} url={sourceInfo.url} {onClick} />
-						</div>
-					{/each}
-				</div>
-			</LinkPreview.Content>
+			<LinkPreview.Portal>
+				<LinkPreview.Content class="z-[999]" align="start" strategy="fixed" sideOffset={6}>
+					<div class="bg-gray-50 dark:bg-gray-850 rounded-xl p-1 cursor-pointer">
+						{#each token.citationIdentifiers ?? token.ids as identifier}
+							{@const tokenId =
+								typeof identifier === 'string' ? parseInt(identifier.split('#')[0]) : identifier}
+							{@const sourceInfo = getSourceInfo(tokenId - 1)}
+							<div class="">
+								<Source id={identifier} title={sourceInfo.name} url={sourceInfo.url} {onClick} />
+							</div>
+						{/each}
+					</div>
+				</LinkPreview.Content>
+			</LinkPreview.Portal>
 		</LinkPreview.Root>
 	{/if}
 {:else}
