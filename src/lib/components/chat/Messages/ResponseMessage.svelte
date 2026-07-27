@@ -52,6 +52,7 @@
 
 	import Error from './Error.svelte';
 	import Citations from './Citations.svelte';
+	import RetrievalFilters from './RetrievalFilters.svelte';
 	import CodeExecutions from './CodeExecutions.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
@@ -838,6 +839,10 @@
 									content={message?.content ?? ''}
 									{readOnly}
 								/>
+							{/if}
+
+							{#if message?.retrievalFilters && (model?.info?.meta?.capabilities?.retrieval_filters ?? true)}
+								<RetrievalFilters filters={message?.retrievalFilters} />
 							{/if}
 
 							{#if message.code_executions}

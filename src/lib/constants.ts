@@ -103,6 +103,7 @@ export const DEFAULT_CAPABILITIES = {
 	image_generation: true,
 	code_interpreter: true,
 	citations: true,
+	retrieval_filters: true,
 	status_updates: true,
 	usage: undefined,
 	builtin_tools: true

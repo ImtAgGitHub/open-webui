@@ -41,6 +41,10 @@
 			label: $i18n.t('Citations'),
 			description: $i18n.t('Displays citations in the response')
 		},
+		retrieval_filters: {
+			label: $i18n.t('Retrieval Filters'),
+			description: $i18n.t('Displays active retrieval filters in the response')
+		},
 		status_updates: {
 			label: $i18n.t('Status Updates'),
 			description: $i18n.t('Displays status updates (e.g., web search progress) in the response')
@@ -62,6 +66,7 @@
 		code_interpreter?: boolean;
 		usage?: boolean;
 		citations?: boolean;
+		retrieval_filters?: boolean;
 		status_updates?: boolean;
 		builtin_tools?: boolean;
 	} = {};

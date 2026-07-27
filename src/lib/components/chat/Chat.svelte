@@ -505,6 +505,9 @@
 							message.sources = [data];
 						}
 					}
+				} else if (type === 'filter') {
+					// Active retrieval filters reported by the model/pipeline.
+					message.retrievalFilters = data?.filters ?? [];
 				} else if (type === 'notification') {
 					const toastType = data?.type ?? 'info';
 					const toastContent = data?.content ?? '';
