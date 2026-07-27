@@ -106,6 +106,7 @@ export const DEFAULT_CAPABILITIES = {
 	code_interpreter: true,
 	terminal: true,
 	citations: true,
+	retrieval_filters: true,
 	status_updates: true,
 	usage: undefined,
 	builtin_tools: true
