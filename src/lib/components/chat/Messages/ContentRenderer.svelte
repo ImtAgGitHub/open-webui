@@ -97,31 +97,6 @@
 	let contentContainerElement;
 	let floatingButtonsElement;
 
-	let sourceIds = [];
-	$: getSourceIds(sources);
-
-	const getSourceIds = (sources) => {
-		const result = [];
-		for (const source of sources ?? []) {
-			for (let index = 0; index < (source.document ?? []).length; index++) {
-				if (model?.info?.meta?.capabilities?.citations == false) {
-					result.push('N/A');
-					continue;
-				}
-				const metadata = source.metadata?.[index];
-				const id = metadata?.source ?? 'N/A';
-				if (metadata?.name) {
-					result.push(metadata.name);
-				} else if (id.startsWith('http://') || id.startsWith('https://')) {
-					result.push(id);
-				} else {
-					result.push(source?.source?.name ?? id);
-				}
-			}
-		}
-		sourceIds = [...new Set(result)];
-	};
-
 	/** @param {string} messageContent */
 	const formatMessageContent = (messageContent) =>
 		model?.info?.meta?.capabilities?.citations == false
@@ -320,7 +295,6 @@
 				return acc;
 			}, [])}
 
-			{sourceIds}
 			renderMarkdown={$settings?.renderMarkdownInAssistantMessages ?? true}
 			{formatMessageContent}
 			{onSourceClick}
