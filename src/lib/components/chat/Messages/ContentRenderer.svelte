@@ -97,8 +97,6 @@
 	let contentContainerElement;
 	let floatingButtonsElement;
 
-<<<<<<< HEAD
-=======
 	let sourceIds = [];
 	$: getSourceIds(sources);
 
@@ -174,7 +172,6 @@
 		}
 	);
 
->>>>>>> v0.11.0
 	const updateButtonPosition = (event) => {
 		const buttonsContainerElement = document.getElementById(`floating-buttons-${id}`);
 		if (
@@ -293,7 +290,7 @@
 			{done}
 			{editCodeBlock}
 			{topPadding}
-<<<<<<< HEAD
+
 			sourceIds={(sources ?? []).reduce((acc, source) => {
 				let ids = [];
 				source.document.forEach((document, index) => {
@@ -322,11 +319,10 @@
 				acc = [...acc, ...ids];
 				return acc;
 			}, [])}
-=======
+
 			{sourceIds}
 			renderMarkdown={$settings?.renderMarkdownInAssistantMessages ?? true}
 			{formatMessageContent}
->>>>>>> v0.11.0
 			{onSourceClick}
 			{onTaskClick}
 			{onSave}
