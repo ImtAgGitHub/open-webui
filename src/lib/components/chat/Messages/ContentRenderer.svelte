@@ -265,7 +265,6 @@
 			{done}
 			{editCodeBlock}
 			{topPadding}
-
 			sourceIds={(sources ?? []).reduce((acc, source) => {
 				let ids = [];
 				source.document.forEach((document, index) => {
@@ -294,7 +293,6 @@
 				acc = [...acc, ...ids];
 				return acc;
 			}, [])}
-
 			renderMarkdown={$settings?.renderMarkdownInAssistantMessages ?? true}
 			{formatMessageContent}
 			{onSourceClick}
