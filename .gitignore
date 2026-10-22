@@ -314,3 +314,5 @@ cypress/screenshots
 
 # BAM
 /data
+*.tar.gz
+_data_bak
