@@ -28,7 +28,7 @@
 	export let editCodeBlock = true;
 	export let topPadding = false;
 	export let allowEmbeds = false;
-	export let sourceIds: string[] = [];
+	export let sourceIds: (string | { name: string; url?: string | null })[] = [];
 	export let formatMessageContent: (content: string) => string = (content) => content;
 	export let onSave: any = () => {};
 	export let onSourceClick: any = () => {};

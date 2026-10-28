@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { decodeString } from '$lib/utils';
+	import { openCitationUrl } from '$lib/utils/citations';
 
 	const i18n = getContext('i18n');
 
@@ -11,10 +12,12 @@
 
 	export let onClick: Function = () => {};
 
-	// Handler for click - opens URL in new tab if available
+	// Open the link when the source has one, otherwise fall back to the citation modal
 	function handleClick() {
 		if (url) {
-			window.open(url, '_blank');
+			openCitationUrl(url);
+		} else {
+			onClick(id);
 		}
 	}
 

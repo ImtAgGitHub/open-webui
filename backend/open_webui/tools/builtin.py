@@ -3351,6 +3351,8 @@ async def query_knowledge_files(
                         'source': metadatas[idx].get('source', metadatas[idx].get('name', 'Unknown')),
                         'file_id': metadatas[idx].get('file_id', ''),
                     }
+                    if metadatas[idx].get('url'):
+                        chunk_info['url'] = metadatas[idx]['url']
                     if idx < len(distances):
                         chunk_info['distance'] = distances[idx]
                     chunks.append(chunk_info)
@@ -3377,6 +3379,8 @@ async def query_knowledge_files(
                     'type': 'external',
                     'knowledge_id': knowledge.id,
                 }
+                if metadata.get('url'):
+                    chunk_info['url'] = metadata['url']
                 if idx < len(distances):
                     chunk_info['distance'] = distances[idx]
                 chunks.append(chunk_info)
