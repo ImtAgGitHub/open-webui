@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import { embed, showControls, showEmbeds } from '$lib/stores';
 	import { isValidHttpUrl } from '$lib/utils';
+	import { buildCitationEntries, openCitationUrl } from '$lib/utils/citations';
 
 	import CitationModal from './Citations/CitationModal.svelte';
 
@@ -15,6 +16,8 @@
 	export let readOnly = false;
 
 	let citations = [];
+	let citationEntries = [];
+	let citationByEntryKey = new Map<string, any>();
 	let showPercentage = false;
 	let showRelevance = true;
 
@@ -59,11 +62,12 @@
 			index = sourceId - 1;
 		}
 
-		if (citations[index]) {
-			console.log('Showing citation modal for:', citations[index]);
+		const entry = citationEntries[index];
+		const citation = entry ? citationByEntryKey.get(entry.key) : null;
 
-			if (citations[index]?.source?.embed_url) {
-				const embedUrl = citations[index].source.embed_url;
+		if (citation) {
+			if (citation?.source?.embed_url) {
+				const embedUrl = citation.source.embed_url;
 				// The embed panel renders anything it cannot read as a URL as raw HTML
 				if (
 					typeof embedUrl === 'string' &&
@@ -78,19 +82,19 @@
 						showEmbeds.set(true);
 						embed.set({
 							url: embedUrl,
-							title: citations[index]?.source?.name || 'Embedded Content',
-							source: citations[index],
+							title: citation?.source?.name || 'Embedded Content',
+							source: citation,
 							chatId: chatId,
 							messageId: id,
 							sourceId: sourceId
 						});
 					}
 				} else {
-					selectedCitation = citations[index];
+					selectedCitation = citation;
 					showCitationModal = true;
 				}
 			} else {
-				selectedCitation = citations[index];
+				selectedCitation = citation;
 				showCitationModal = true;
 			}
 		}
@@ -126,92 +130,65 @@
 	}
 
 	$: {
-		// Extract which source indices are actually cited in the message content
+		// Numbering must match the backend, so resolve [n] through the shared entry list
+		citationEntries = buildCitationEntries(sources);
+
+		// Only show sources that are actually cited; fall back to all if nothing resolves
 		const citedIndices = extractCitedIndices(content);
-
-		// Build a flat list of all source chunks with their original indices
-		// Each source in 'sources' array contains document chunks - we need to track the overall index
-		let allChunks: { sourceIdx: number; chunkIdx: number; source: any }[] = [];
-		let chunkIndex = 0;
-		sources.forEach((source, sourceIdx) => {
-			if (Object.keys(source).length === 0) return;
-			const docCount = source?.document?.length ?? 0;
-			for (let i = 0; i < docCount; i++) {
-				allChunks.push({
-					sourceIdx,
-					chunkIdx: i,
-					source,
-					overallIndex: chunkIndex + 1 // 1-based index for citation matching
-				});
-				chunkIndex++;
-			}
-		});
-
-		// If content has citations, filter to only show cited sources
-		// Otherwise show all (for backward compatibility or when content is empty)
-		let filteredSources = sources;
+		let selectedEntries = citationEntries;
 		if (citedIndices.size > 0) {
-			// Get the set of source indices that were cited
-			const citedSourceIndices = new Set<number>();
-			allChunks.forEach((chunk) => {
-				if (citedIndices.has(chunk.overallIndex)) {
-					citedSourceIndices.add(chunk.sourceIdx);
-				}
-			});
-			filteredSources = sources.filter((_, idx) => citedSourceIndices.has(idx));
+			const citedEntries = citationEntries.filter((_, idx) => citedIndices.has(idx + 1));
+			if (citedEntries.length > 0) {
+				selectedEntries = citedEntries;
+			}
 		}
 
-		// Group citations by document (source.id) rather than by chunk
-		// This ensures multiple chunks from the same document appear as a single entry
-		citations = filteredSources.reduce((acc, source) => {
-			if (Object.keys(source).length === 0) {
-				return acc;
+		// Display one entry per document (source.id); numbering above stays per unique source
+		const groups = new Map<string, any>();
+		citationByEntryKey = new Map<string, any>();
+
+		for (const entry of selectedEntries) {
+			for (const { sourceIdx, docIdx } of entry.refs) {
+				const source = sources[sourceIdx];
+				const metadata = source?.metadata?.[docIdx];
+				const distance = source?.distances?.[docIdx];
+				const groupKey = source?.source?.id || metadata?.source || 'N/A';
+
+				let group = groups.get(groupKey);
+				if (!group) {
+					let _source = source?.source ?? {};
+					let openUrl = _source.url || metadata?.url || null;
+
+					if (!_source.name) {
+						_source = { ..._source, name: metadata?.name ?? groupKey };
+					}
+					if (groupKey.startsWith('http://') || groupKey.startsWith('https://')) {
+						_source = { ..._source, name: groupKey, url: groupKey };
+						openUrl = openUrl ?? groupKey;
+					}
+
+					group = {
+						id: groupKey,
+						source: _source,
+						openUrl,
+						document: [],
+						metadata: [],
+						distances: []
+					};
+					groups.set(groupKey, group);
+				} else if (!group.openUrl && metadata?.url) {
+					group.openUrl = metadata.url;
+				}
+
+				group.document.push(source.document[docIdx]);
+				if (metadata) group.metadata.push(metadata);
+				if (distance !== undefined) group.distances.push(distance);
+
+				citationByEntryKey.set(entry.key, group);
 			}
+		}
 
-			// Use source.id as the grouping key (document level)
-			const documentId = source?.source?.id ?? 'N/A';
-			const existingSource = acc.find((item) => item.id === documentId);
-
-			if (existingSource) {
-				// Add documents and metadata from this source to existing entry
-				source?.document?.forEach((document, index) => {
-					const metadata = source?.metadata?.[index];
-					const distance = source?.distances?.[index];
-
-					existingSource.document.push(document);
-					if (metadata) existingSource.metadata.push(metadata);
-					if (distance !== undefined) existingSource.distances.push(distance);
-				});
-			} else {
-				// Create new entry for this document
-				let _source = source?.source ?? {};
-
-				// Collect all documents and metadata from this source
-				const documents: string[] = [];
-				const metadatas: any[] = [];
-				const distances: number[] = [];
-
-				source?.document?.forEach((document, index) => {
-					const metadata = source?.metadata?.[index];
-					const distance = source?.distances?.[index];
-
-					documents.push(document);
-					if (metadata) metadatas.push(metadata);
-					if (distance !== undefined) distances.push(distance);
-				});
-
-				acc.push({
-					id: documentId,
-					source: _source,
-					document: documents,
-					metadata: metadatas,
-					distances: distances
-				});
-			}
-
-			return acc;
-		}, []);
-		console.log('citations', citations);
+		citations = [...groups.values()];
 
 		showRelevance = calculateShowRelevance(citations);
 		showPercentage = shouldShowPercentage(citations);
@@ -295,9 +272,9 @@
 					})}
 					class="no-toggle outline-hidden flex dark:text-gray-300 bg-transparent text-gray-600 rounded-xl gap-1.5 items-center"
 					on:click={() => {
-						// Open document URL in new tab if available, otherwise show modal
-						if (citation?.source?.url) {
-							window.open(citation.source.url, '_blank');
+						// Open the document link if available, otherwise show the modal
+						if (citation?.openUrl) {
+							openCitationUrl(citation.openUrl);
 						} else {
 							showCitationModal = true;
 							selectedCitation = citation;

@@ -15,7 +15,7 @@
 	export let done: boolean = true;
 	export let editCodeBlock: boolean = true;
 	export let allowEmbeds: boolean = false;
-	export let sourceIds: string[] = [];
+	export let sourceIds: (string | { name: string; url?: string | null })[] = [];
 	export let onTaskClick: Function = () => {};
 	export let onSourceClick: Function = () => {};
 

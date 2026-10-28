@@ -547,6 +547,7 @@ def get_citation_source_from_tool_result(
                         'name': source_name,
                         'source': source_name,
                         **({'note_id': note_id} if note_id else {}),
+                        **({'url': chunk['url']} if chunk.get('url') else {}),
                     }
                 )
                 if 'distance' in chunk:

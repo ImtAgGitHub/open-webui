@@ -15,6 +15,7 @@
 	} from '$lib/stores';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
 	import { createMessagesList, replaceOutsideCode } from '$lib/utils';
+	import { buildCitationEntries } from '$lib/utils/citations';
 
 	/**
 	 * Extracts all top-level <details>...</details> blocks from content,
@@ -101,34 +102,10 @@
 	let floatingButtonsElement;
 
 	let sourceIds = [];
-	$: getSourceIds(sources);
-
-	const getSourceIds = (sources) => {
-		const result = [];
-		const seenIds = new Set();
-		for (const source of sources ?? []) {
-			for (let index = 0; index < (source.document ?? []).length; index++) {
-				if (model?.info?.meta?.capabilities?.citations == false) {
-					result.push('N/A');
-					continue;
-				}
-				const metadata = source.metadata?.[index];
-				const id = metadata?.source ?? source?.source?.id ?? 'N/A';
-				if (seenIds.has(id)) {
-					continue;
-				}
-				seenIds.add(id);
-				if (metadata?.name) {
-					result.push(metadata.name);
-				} else if (id.startsWith('http://') || id.startsWith('https://')) {
-					result.push(id);
-				} else {
-					result.push(source?.source?.name ?? id);
-				}
-			}
-		}
-		sourceIds = result;
-	};
+	$: sourceIds = buildCitationEntries(
+		sources,
+		model?.info?.meta?.capabilities?.citations != false
+	).map(({ name, url }) => ({ name, url }));
 
 	/** @param {string} messageContent */
 	const formatMessageContent = (messageContent) =>
@@ -302,34 +279,7 @@
 			{allowEmbeds}
 			{editCodeBlock}
 			{topPadding}
-			sourceIds={(sources ?? []).reduce((acc, source) => {
-				let ids = [];
-				source.document.forEach((document, index) => {
-					if (model?.info?.meta?.capabilities?.citations == false) {
-						ids.push({ name: 'N/A', url: null });
-						return ids;
-					}
-
-					const metadata = source.metadata?.[index];
-					const id = metadata?.source ?? 'N/A';
-					const url = metadata?.url ?? null;
-
-					let name;
-					if (metadata?.name) {
-						name = metadata.name;
-					} else if (id.startsWith('http://') || id.startsWith('https://')) {
-						name = id;
-					} else {
-						name = source?.source?.name ?? id;
-					}
-
-					ids.push({ name, url });
-					return ids;
-				});
-
-				acc = [...acc, ...ids];
-				return acc;
-			}, [])}
+			{sourceIds}
 			renderMarkdown={$settings?.renderMarkdownInAssistantMessages ?? true}
 			{formatMessageContent}
 			{onSourceClick}
