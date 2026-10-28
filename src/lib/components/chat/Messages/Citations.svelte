@@ -163,7 +163,11 @@
 						_source = { ..._source, name: metadata?.name ?? groupKey };
 					}
 					if (groupKey.startsWith('http://') || groupKey.startsWith('https://')) {
-						_source = { ..._source, name: groupKey, url: groupKey };
+						_source = {
+							..._source,
+							name: metadata?.external ? _source.name : groupKey,
+							url: groupKey
+						};
 						openUrl = openUrl ?? groupKey;
 					}
 
@@ -268,7 +272,7 @@
 				<button
 					id={`source-${id}-${idx + 1}`}
 					aria-label={$i18n.t('View source: {{name}}', {
-						name: decodeString(citation.source.name)
+						name: `${idx + 1} ${decodeString(citation.source.name)}`
 					})}
 					class="no-toggle outline-hidden flex dark:text-gray-300 bg-transparent text-gray-600 rounded-xl gap-1.5 items-center"
 					on:click={() => {
