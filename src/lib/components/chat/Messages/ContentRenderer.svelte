@@ -102,9 +102,10 @@
 	let floatingButtonsElement;
 
 	let sourceIds = [];
-	$: sourceIds = buildCitationEntries(sources, model?.info?.meta?.capabilities?.citations != false).map(
-		({ name, url }) => ({ name, url })
-	);
+	$: sourceIds = buildCitationEntries(
+		sources,
+		model?.info?.meta?.capabilities?.citations != false
+	).map(({ name, url }) => ({ name, url }));
 
 	/** @param {string} messageContent */
 	const formatMessageContent = (messageContent) =>
